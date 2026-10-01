@@ -26,6 +26,7 @@ app.use((err, req, res, next) => {
 
 if (process.env.MONGODB_URI) {
   mongoose.connect(process.env.MONGODB_URI, {
+    dbName: 'portfolio',
     serverSelectionTimeoutMS: 8000,
     connectTimeoutMS: 8000,
     socketTimeoutMS: 10000,
