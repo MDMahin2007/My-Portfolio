@@ -6,8 +6,11 @@ const Message = require('../models/Message');
 
 const sendNotification = async ({ name, phone, email, message }) => {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return false;
+  const smtpPort = Number(process.env.SMTP_PORT || 465);
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: smtpPort,
+    secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === 'true' : smtpPort === 465,
     auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
     connectionTimeout: 10000,
     greetingTimeout: 10000,

@@ -11,10 +11,11 @@ const app = express();
 let databaseReady = false;
 let databaseState = process.env.MONGODB_URI ? 'connecting' : 'not-configured';
 let databaseError = '';
+const frontendOrigin = new URL(process.env.FRONTEND_URL || 'http://localhost:5173').origin;
 
 mongoose.set('bufferCommands', false);
 
-app.use(cors({ origin: process.env.FRONTEND_URL || true }));
+app.use(cors({ origin: frontendOrigin }));
 app.use(express.json({ limit: '50kb' }));
 app.use((err, req, res, next) => {
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {

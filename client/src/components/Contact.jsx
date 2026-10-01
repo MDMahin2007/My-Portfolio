@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { profile } from '../data'
 
-const API_URL = import.meta.env.VITE_API_URL || ''
+const API_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
 
 const makeDirectEmail = ({ name, email, phone, message }) => {
   const subject = `Portfolio message from ${name}`
@@ -52,7 +52,7 @@ function Contact() {
         throw apiError
       } else {
         if (result.emailSent) {
-          setStatus({ type: 'success', title: 'Message sent successfully', text: 'Your message was delivered to my Gmail inbox.', detail: result.savedToDatabase ? 'Saved securely to the portfolio database.' : '' })
+          setStatus({ type: 'success', title: 'Message sent successfully', text: 'Your message was delivered to my Gmail inbox.', detail: result.savedToDatabase ? '' : '' })
           setForm({ name: '', email: '', phone: '', message: '' })
         } else {
           showDirectEmailFallback('The server accepted the request, but Gmail delivery was not confirmed.', 'Use the email option below to send it directly.')
