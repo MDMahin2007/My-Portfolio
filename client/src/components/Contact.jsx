@@ -12,28 +12,28 @@ const makeDirectEmail = ({ name, email, phone, message }) => {
 
 function Contact() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' })
-  const [status, setStatus] = useState({ type: '', text: '' })
+  const [status, setStatus] = useState({ type: '', title: '', text: '', detail: '' })
   const [fallbackLink, setFallbackLink] = useState('')
   const [sending, setSending] = useState(false)
 
   const handleChange = (event) => setForm({ ...form, [event.target.name]: event.target.value })
 
-  const showDirectEmailFallback = (openComposer = false) => {
+  const showDirectEmailFallback = (text, detail = '', openComposer = false) => {
     const directEmail = makeDirectEmail(form)
     setFallbackLink(directEmail)
-    setStatus({ type: 'fallback', text: 'Opening your email app. Press Send there to deliver the message.' })
+    setStatus({ type: 'fallback', title: 'Message was not delivered', text, detail })
     if (openComposer) window.location.assign(directEmail)
   }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
     setSending(true)
-    setStatus({ type: '', text: '' })
+    setStatus({ type: '', title: '', text: '', detail: '' })
     setFallbackLink('')
 
     try {
       if (!API_URL) {
-        showDirectEmailFallback(true)
+        showDirectEmailFallback('The contact API is not configured. Use the email option below to send it directly.')
         return
       }
 
@@ -42,21 +42,25 @@ function Contact() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-      const result = await response.json()
+      const result = await response.json().catch(() => ({ message: `Server returned HTTP ${response.status}.` }))
 
       if (result.fallbackRequired) {
-        showDirectEmailFallback(true)
+        showDirectEmailFallback(result.message || 'Gmail delivery is unavailable right now.', result.deliveryError || (result.savedToDatabase ? 'Your message was saved, but the Gmail notification could not be sent.' : 'The server could not deliver the message.'))
       } else if (!response.ok) {
         const apiError = new Error(result.message || 'Could not send your message.')
         apiError.status = response.status
         throw apiError
       } else {
-        setStatus({ type: 'success', text: result.emailSent ? 'Thanks - your message is on its way.' : 'Message saved successfully.' })
-        setForm({ name: '', email: '', phone: '', message: '' })
+        if (result.emailSent) {
+          setStatus({ type: 'success', title: 'Message sent successfully', text: 'Your message was delivered to my Gmail inbox.', detail: result.savedToDatabase ? 'Saved securely to the portfolio database.' : '' })
+          setForm({ name: '', email: '', phone: '', message: '' })
+        } else {
+          showDirectEmailFallback('The server accepted the request, but Gmail delivery was not confirmed.', 'Use the email option below to send it directly.')
+        }
       }
     } catch (error) {
-      if (error.status >= 500 || error.name === 'TypeError') showDirectEmailFallback(true)
-      else setStatus({ type: 'error', text: error.message })
+      if (error.status >= 500 || error.name === 'TypeError') showDirectEmailFallback('The contact server is unavailable right now.', 'Start the server or use the email option below to send your message directly.')
+      else setStatus({ type: 'error', title: 'Message could not be sent', text: error.message, detail: 'Please review the form and try again.' })
     } finally {
       setSending(false)
     }
@@ -89,9 +93,10 @@ function Contact() {
           <label><span>Message</span><textarea name="message" value={form.message} onChange={handleChange} placeholder="Tell me a little about your idea..." rows="3" required /></label>
           <div className="form-submit">
             <button className="button button-primary" type="submit" disabled={sending}>{sending ? 'Sending...' : 'Send message'} <span>↗</span></button>
-            {status.text && (status.type === 'fallback'
-              ? <div className="fallback-message" role="status" aria-live="polite"><p>{status.text}</p><a href={fallbackLink}>Open email app <span>↗</span></a></div>
-              : <p className={status.type} role="status" aria-live="polite">{status.text}</p>)}
+            {status.text && <div className={`status-card status-${status.type}`} role="status" aria-live="polite">
+              <span className="status-card-icon">{status.type === 'success' ? '✓' : '!'}</span>
+              <div><strong>{status.title}</strong><p>{status.text}</p>{status.detail && <small>{status.detail}</small>}{status.type === 'fallback' && <a href={fallbackLink}>Open email app <span>↗</span></a>}</div>
+            </div>}
           </div>
         </form>
       </div>

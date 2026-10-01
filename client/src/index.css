@@ -221,6 +221,14 @@ h2 em, h1 em { color: var(--mint); font-style: normal; }
 .fallback-message { display: flex; flex-direction: column; gap: 7px; max-width: 230px; }
 .fallback-message p { color: #ab573b; }
 .fallback-message a { color: #527526; font: 10px var(--mono); }
+.status-card { display: flex; align-items: flex-start; gap: 11px; width: min(100%, 305px); padding: 12px 13px; border: 1px solid var(--line); background: rgba(17,19,21,.55); }
+.status-card-icon { display: grid; flex: 0 0 19px; width: 19px; height: 19px; place-items: center; border: 1px solid currentColor; border-radius: 50%; font: 11px var(--mono); }
+.status-card strong { display: block; margin-bottom: 4px; color: var(--paper); font: 500 11px var(--display); }
+.status-card p, .status-card small { display: block; max-width: none; color: var(--paper-muted); font: 9px/1.5 var(--mono); }
+.status-card small { margin-top: 4px; color: #858b82; }
+.status-card a { display: inline-block; margin-top: 8px; color: var(--mint); font: 9px var(--mono); }
+.status-card.success { color: var(--mint); border-color: rgba(182,243,106,.35); }
+.status-card.fallback, .status-card.error { color: var(--orange); border-color: rgba(253,132,84,.38); }
 .site-footer { background: var(--ink); padding: 53px 0 23px; }
 .footer-main { display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: start; padding-bottom: 60px; }
 .footer-main p { color: var(--paper-muted); font: 11px/1.65 var(--mono); }

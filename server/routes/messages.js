@@ -45,7 +45,18 @@ router.post('/', async (req, res) => {
     }
 
     let emailSent = false;
-    try { emailSent = await sendNotification(payload); } catch (emailError) { console.error('Notification email failed:', emailError.message); }
+    let deliveryError = '';
+    try {
+      emailSent = await sendNotification(payload);
+      if (!emailSent) deliveryError = 'Server email credentials are missing or incomplete.';
+    } catch (emailError) {
+      deliveryError = emailError.code === 'EAUTH'
+        ? 'Gmail authentication failed. Check EMAIL_USER and EMAIL_PASS in server/.env.'
+        : emailError.code === 'ETIMEDOUT' || emailError.code === 'ESOCKET'
+          ? 'The Gmail SMTP connection timed out. Check your network or Gmail SMTP access.'
+          : 'The Gmail notification service is unavailable right now.';
+      console.error('Notification email failed:', emailError.message);
+    }
 
     if (!emailSent) {
       return res.status(202).json({
@@ -54,6 +65,7 @@ router.post('/', async (req, res) => {
           : 'Message could not be delivered by the server yet. Use the direct email option.',
         emailSent: false,
         savedToDatabase,
+        deliveryError,
         fallbackRequired: true,
       });
     }
